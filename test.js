@@ -17,20 +17,49 @@ app.get('/', async (req, res) => {
     }
 });
 
-async function example() {
+const searchQuery = 'dirt';
+
+async function searchCraigslist() {
   let driver = await new Builder().forBrowser('chrome').build();
   try {
-    await driver.get('http://www.google.com/ncr');
-    var searchForm = await driver.findElement(By.className('MV3Tnb'));
-    searchForm = searchForm.getText()
-    // await driver.wait(until.titleIs('webdriver - Google Search'), 1000);
-    return searchForm;
+    await driver.get(`https://minneapolis.craigslist.org/search/zip?query=${searchQuery}#search=1~list~0~0`);
+
+    var searchForm = await driver.findElement(By.tagName('ol'));
+    await driver.sleep(3000);
+    let content = await driver.findElement(By.className('results'));
+    const results = await driver.findElements(By.className('cl-search-result'));
+
+    await driver.sleep(1000);
+    return await getResults(results);
+
+    } catch(err) {
+        throw new Error(err);
     } finally {
     await driver.quit();
   }
 };
 
-example().then(searchForm => console.log(searchForm));
+async function getResults(posts) {
+    let postDetails = [];
+    try {
+        for (post of posts) {
+            const title = await post.findElement(By.className('titlestring')).getText();
+            const url = await post.findElement(By.className('titlestring')).getAttribute('href');
+            // const location = await post.findElement(By.css('.supertitle'));
+            postDetails.push({
+            title: title ?? '',
+            url: url ?? '',
+            // location: location ?? '',
+        });
+        }
+    } catch (error) {
+        console.log(error);
+    }
+    return postDetails;
+}
+
+searchCraigslist().then(results => console.log(results));
+
 
 
    
