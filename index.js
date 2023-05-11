@@ -1,18 +1,62 @@
-const fs = require('fs');
-const got = require('got');
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+const express = require('express');
+const { Builder, By } = require('selenium-webdriver');
 
-const vgmUrl= 'https://minneapolis.craigslist.org/search/zip?query=dirt&sort=date#search=1~list~0~0';
+const app = express();
+const PORT = 3000;
 
-got(vgmUrl).then(response => {
-    const dom = new JSDOM(response.body);
-    // console.log(dom);
-    // Create an Array out of the HTML Elements for filtering using spread syntax.
-    const nodeList = dom.window.document.getElementsByClassName('titlestring');
-    // console.log(nodeList);
-    console.log(nodeList.length);
-    }).catch(err => {
-    console.log(err);
-    });
+app.get('/', async (req, res) => {
+    // web scraping goes here
+    try {
+        const data = await WebScrapingLocalTest();
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Server error',
+        });
+        console.error(error);
+    }
+});
 
+async function WebScrapingLocalTest() {
+    try {
+        driver = await new Builder().forBrowser('chrome').build();
+        await driver.get('https://www.youtube.com/c/LambdaTest/videos');
+        const allVideos = await driver.findElements(
+            By.css('ytd-rich-grid-row')
+        );
+        // console.log(allVideos);
+        return await getVideos(allVideos);
+    } catch (error) {
+        throw new Error(error);
+    }
+    finally {
+        // await driver.quit();
+    }
+}
+
+app.listen(PORT, () => {
+    console.log(`listening on port ${PORT}`);
+});
+
+async function getVideos(videos) {
+    let videoDetails = [];
+    try {
+      for (const video of videos) {
+        const title = await video.findElement(By.id('video-title')).getText();
+        const views = await video
+          .findElement(By.xpath(".//*[@id='metadata-line']/span[1]"))
+          .getText();
+        const date = await video
+          .findElement(By.xpath(".//*[@id='metadata-line']/span[2]"))
+          .getText();
+        videoDetails.push({
+          title: title ?? '',
+          views: views ?? '',
+          publishedDate: date ?? '',
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return videoDetails;
+   }
