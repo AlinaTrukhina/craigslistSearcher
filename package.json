@@ -10,6 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "jsdom": "^22.0.0"
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "file-system": "^2.2.2",
+    "got": "^10.4.0",
+    "jsdom": "^22.0.0",
+    "node-fetch": "^3.3.1"
   }
 }
